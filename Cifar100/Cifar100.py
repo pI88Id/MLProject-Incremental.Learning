@@ -1,3 +1,6 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
 import torch
 from torch.utils.data import DataLoader
 
@@ -7,15 +10,18 @@ from torchvision import transforms
 from tqdm import tqdm
 
 class Cifar100:
-    def __init__(self, batch_size=256):
-
+    def __init__(self, batch_size=256, num_epochs=50, device='cuda', lr=1e-3, step_size=20, gamma=0.1):
+        self.BATCH_SIZE = batch_size
+        self.NUM_EPOCHS = num_epochs
+        self.DEVICE = device
+        self.STEP_SIZE = step_size
+        self.GAMMA = gamma
+        self.LR = lr
         self.train_transform = transforms.Compose([
-                                          transforms.Resize(256),
                                           transforms.ToTensor(),  # Turn PIL Image to torch.Tensor
                                           transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalizes tensor with mean and standard deviation
                                          ])
         self.eval_transform = transforms.Compose([
-                                         transforms.Resize(256),
                                          transforms.ToTensor(),
                                          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                                         ])
@@ -39,7 +45,7 @@ class Cifar100:
         elif(split == 'test'):
           return self.test_dataloader
 
-    def test(self, net, test_dataloader, DEVICE, criterion):
+    def test(self, net, test_dataloader, criterion):
 
         net.train(False)  # Set Network to evaluation mode
 
@@ -47,8 +53,8 @@ class Cifar100:
         outputs = []
         labels = []
         for images, labels in tqdm(test_dataloader):
-            images = images.to(DEVICE)
-            labels = labels.to(DEVICE)
+            images = images.to(self.DEVICE)
+            labels = labels.to(self.DEVICE)
 
             # Forward Pass
             outputs = net(images)
@@ -64,3 +70,29 @@ class Cifar100:
         loss = criterion(outputs, labels)
 
         return accuracy, loss
+
+    def plot(self, acc_train, acc_test, loss_train, loss_test):
+        title = 'LossFunction - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
+                % (self.BATCH_SIZE, self.LR, self.NUM_EPOCHS, self.STEP_SIZE, self.GAMMA)
+        title2 = 'Accuracy classes - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
+                 % (self.BATCH_SIZE, self.LR, self.NUM_EPOCHS, self.STEP_SIZE, self.GAMMA)
+
+        x = np.linspace(1, self.NUM_EPOCHS, self.NUM_EPOCHS)
+
+        plt.plot(x, loss_train, color='mediumseagreen')
+        plt.plot(x, loss_test, color='lightseagreen')
+        plt.title(title)
+        plt.xticks(np.arange(1, self.NUM_EPOCHS, 4))
+        plt.xlabel('epoch')
+        plt.ylabel('loss')
+        plt.legend(['loss_train', 'loss_test'], loc='best')
+        plt.show()
+
+        plt.plot(acc_train, color='mediumseagreen')
+        plt.plot(acc_test, color='lightseagreen')
+        plt.legend(['accuracy_train', 'accuracy_test'], loc='best')
+        plt.title(title2)
+        plt.xlabel('epoch')
+        plt.ylabel('accuracy_score')
+
+        print('Accuracy test', acc_test)
