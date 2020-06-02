@@ -39,12 +39,32 @@ class Cifar100:
         print('Train Dataset: {}'.format(len(self.train_dataset)))
         print('Test Dataset: {}'.format(len(self.test_dataset)))
 
-    def load(self, split='train'):
+    def load(self, split='train', index=0):
 
-        if(split == 'train'):
-          return self.train_dataloader
-        elif(split == 'test'):
-          return self.test_dataloader
+        data = []
+        i = 0
+
+        if (split == 'train'):
+
+            searched_classes = np.linspace(index * 10, index * 10 + 9, 10)
+
+            for el in self.train_dataset.targets:
+                if (el in searched_classes):
+                    data.append(self.train_dataset[i])
+                i += 1
+
+            return DataLoader(data, batch_size=self.batch_size, shuffle=True, num_workers=4, drop_last=True)
+
+        elif (split == 'test'):
+
+            searched_classes = np.linspace(0, index * 10 + 9, (index + 1) * 10)
+
+            for el in self.test_dataset.targets:
+                if (el in searched_classes):
+                    data.append(self.train_dataset[i])
+                i += 1
+
+            return DataLoader(data, batch_size=self.batch_size, shuffle=False, num_workers=4)
 
     def test(self, net, test_dataloader, criterion):
 
