@@ -1,3 +1,11 @@
+import torch
+from torch.utils.data import DataLoader
+
+import torchvision
+from torchvision import transforms
+
+import numpy as np
+
 class Cifar100:
   def __init__(self, batch_size=256):
 
