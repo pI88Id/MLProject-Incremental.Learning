@@ -31,8 +31,8 @@ class Cifar100:
         self.train_dataset = torchvision.datasets.CIFAR10(self.DATA_DIR, train=True, transform=self.train_transform, download=True)
         self.test_dataset = torchvision.datasets.CIFAR10(self.DATA_DIR, train=False, transform=self.eval_transform, download=True)
 
-        self.train_dataloader = DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True)
-        self.test_dataloader = DataLoader(self.test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+        # self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.BATCH_SIZE, shuffle=True, num_workers=4, drop_last=True)
+        # self.test_dataloader = DataLoader(self.test_dataset, batch_size=self.BATCH_SIZE, shuffle=False, num_workers=4)
 
         # Check dataset sizes
         print('Cifar100 - DATASET CREATED')
@@ -44,27 +44,27 @@ class Cifar100:
         data = []
         i = 0
 
-        if (split == 'train'):
+        if split == 'train':
 
             searched_classes = np.linspace(index * 10, index * 10 + 9, 10)
 
             for el in self.train_dataset.targets:
-                if (el in searched_classes):
+                if el in searched_classes:
                     data.append(self.train_dataset[i])
                 i += 1
 
-            return DataLoader(data, batch_size=self.batch_size, shuffle=True, num_workers=4, drop_last=True)
+            return DataLoader(data, batch_size=self.BATCH_SIZE, shuffle=True, num_workers=4, drop_last=True)
 
-        elif (split == 'test'):
+        elif split == 'test':
 
             searched_classes = np.linspace(0, index * 10 + 9, (index + 1) * 10)
 
             for el in self.test_dataset.targets:
-                if (el in searched_classes):
+                if el in searched_classes:
                     data.append(self.train_dataset[i])
                 i += 1
 
-            return DataLoader(data, batch_size=self.batch_size, shuffle=False, num_workers=4)
+            return DataLoader(data, batch_size=self.BATCH_SIZE, shuffle=False, num_workers=4)
 
     def test(self, net, test_dataloader, criterion):
 
