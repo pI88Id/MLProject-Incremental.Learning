@@ -1,5 +1,6 @@
 from torchvision.datasets import CIFAR100
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 from PIL import Image
@@ -49,12 +50,12 @@ class Cifar100(CIFAR100):
         self.data = np.concatenate((self.data, images), axis=0)
         self.targets = self.targets + labels
 
-    def plot(self, new_acc_train, new_acc_test, new_loss_train, new_loss_test, args):
+    def plot(self, new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, args):
         num_epochs = len(new_acc_train[0])
         x = np.linspace(1, num_epochs, num_epochs)
 
-        for i, (acc_train, acc_test, loss_train, loss_test) in enumerate(
-                zip(new_acc_train, new_acc_test, new_loss_train, new_loss_test)):
+        for i, (acc_train, acc_test, loss_train, loss_test) in enumerate(zip(new_acc_train, new_acc_test, new_loss_train, new_loss_test)):
+
             title = 'Accuracy dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
                     % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
             title2 = 'Loss dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
@@ -77,5 +78,16 @@ class Cifar100(CIFAR100):
             plt.ylabel('Loss')
             plt.legend(['Train loss', 'Test loss'], loc='best')
             plt.show()
+
+        plt.plot(x, all_acc, color='lightseagreen')
+        plt.title('%s incremental learning accuracy' % (args['name']))
+        plt.xticks(np.arange(1, len(all_acc), 1))
+        plt.xlabel('Iteration')
+        plt.ylabel('Accuracy')
+        plt.legend(['Test accuracy'], loc='best')
+        plt.show()
+
+        csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
+        pd.DataFrame(all_acc).to_csv('./Results/%s.csv' % csv_name)
 
         print('Accuracy last test', new_acc_test[-1])
