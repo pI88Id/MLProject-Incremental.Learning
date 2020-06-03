@@ -92,28 +92,31 @@ class Cifar100:
 
         return accuracy, loss
 
-    def plot(self, acc_train, acc_test, loss_train, loss_test):
-        title = 'LossFunction - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
-                % (self.BATCH_SIZE, self.LR, self.NUM_EPOCHS, self.STEP_SIZE, self.GAMMA)
-        title2 = 'Accuracy classes - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
-                 % (self.BATCH_SIZE, self.LR, self.NUM_EPOCHS, self.STEP_SIZE, self.GAMMA)
+    def plot(self, new_acc_train, new_acc_test, new_loss_train, new_loss_test, args):
+        x = np.linspace(1, len(new_acc_train[0]), len(new_acc_train[0]))
 
-        x = np.linspace(1, self.NUM_EPOCHS, self.NUM_EPOCHS)
+        for i, (acc_train, acc_test, loss_train, loss_test) in enumerate(zip(new_acc_train, new_acc_test, new_loss_train, new_loss_test)):
+            title = 'Accuracy dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
+                    % (i+1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
+            title2 = 'Loss dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
+                     % (i+1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
 
-        plt.plot(x, loss_train, color='mediumseagreen')
-        plt.plot(x, loss_test, color='lightseagreen')
-        plt.title(title)
-        plt.xticks(np.arange(1, self.NUM_EPOCHS, 4))
-        plt.xlabel('epoch')
-        plt.ylabel('loss')
-        plt.legend(['loss_train', 'loss_test'], loc='best')
-        plt.show()
+            plt.plot(x, acc_train, color='mediumseagreen')
+            plt.plot(x, acc_test, color='lightseagreen')
+            plt.title(title)
+            plt.xticks(np.arange(1, len(new_acc_train[0]), 4))
+            plt.xlabel('Epoch')
+            plt.ylabel('Accuracy')
+            plt.legend(['Train accuracy', 'Test accuracy'], loc='best')
+            plt.show()
 
-        plt.plot(acc_train, color='mediumseagreen')
-        plt.plot(acc_test, color='lightseagreen')
-        plt.legend(['accuracy_train', 'accuracy_test'], loc='best')
-        plt.title(title2)
-        plt.xlabel('epoch')
-        plt.ylabel('accuracy_score')
+            plt.plot(x, loss_train, color='mediumseagreen')
+            plt.plot(x, loss_test, color='lightseagreen')
+            plt.title(title2)
+            plt.xticks(np.arange(1, len(new_acc_train[0]), 4))
+            plt.xlabel('Epoch')
+            plt.ylabel('Loss')
+            plt.legend(['Train loss', 'Test loss'], loc='best')
+            plt.show()
 
-        print('Accuracy test', acc_test)
+        print('Accuracy last test', new_acc_test[-1])

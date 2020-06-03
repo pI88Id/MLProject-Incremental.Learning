@@ -1,5 +1,6 @@
 from torchvision.datasets import CIFAR100
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from PIL import Image
 
@@ -47,3 +48,34 @@ class Cifar100(CIFAR100):
 
         self.data = np.concatenate((self.data, images), axis=0)
         self.targets = self.targets + labels
+
+    def plot(self, new_acc_train, new_acc_test, new_loss_train, new_loss_test, args):
+        num_epochs = len(new_acc_train[0])
+        x = np.linspace(1, num_epochs, num_epochs)
+
+        for i, (acc_train, acc_test, loss_train, loss_test) in enumerate(
+                zip(new_acc_train, new_acc_test, new_loss_train, new_loss_test)):
+            title = 'Accuracy dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
+                    % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
+            title2 = 'Loss dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
+                     % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
+
+            plt.plot(x, acc_train, color='mediumseagreen')
+            plt.plot(x, acc_test, color='lightseagreen')
+            plt.title(title)
+            plt.xticks(np.arange(1, num_epochs, 4))
+            plt.xlabel('Epoch')
+            plt.ylabel('Accuracy')
+            plt.legend(['Train accuracy', 'Test accuracy'], loc='best')
+            plt.show()
+
+            plt.plot(x, loss_train, color='mediumseagreen')
+            plt.plot(x, loss_test, color='lightseagreen')
+            plt.title(title2)
+            plt.xticks(np.arange(1, num_epochs, 4))
+            plt.xlabel('Epoch')
+            plt.ylabel('Loss')
+            plt.legend(['Train loss', 'Test loss'], loc='best')
+            plt.show()
+
+        print('Accuracy last test', new_acc_test[-1])
