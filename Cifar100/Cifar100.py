@@ -73,7 +73,7 @@ class Cifar100:
         running_corrects = 0
         outputs = []
         labels = []
-        for images, labels in tqdm(test_dataloader):
+        for _, images, labels in tqdm(test_dataloader):
             images = images.to(self.DEVICE)
             labels = labels.to(self.DEVICE)
 
