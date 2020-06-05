@@ -51,7 +51,7 @@ class Cifar100(CIFAR100):
         self.targets = self.targets + labels
 
 
-def plot(self, new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, args):
+def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, args):
     num_epochs = len(new_acc_train[0])
     x = np.linspace(1, num_epochs, num_epochs)
 
