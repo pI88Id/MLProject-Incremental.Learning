@@ -99,10 +99,13 @@ def train(net, fc, train_dataloader, test_dataloader):
             labels = labels.to(DEVICE)
 
             net.train(True)
+
             # zero the parameter gradients
             optimizer.zero_grad()
+
             # forward
             outputs = net(inputs)
+            outputs = outputs.view(outputs.size(0), -1)
             outputs = fc(outputs)
 
             _, preds = torch.max(outputs, 1)
