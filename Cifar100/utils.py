@@ -57,10 +57,10 @@ def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, ar
 
     for i, (acc_train, acc_test, loss_train, loss_test) in enumerate(zip(new_acc_train, new_acc_test, new_loss_train, new_loss_test)):
 
-        title = 'Accuracy dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
-                % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
-        title2 = 'Loss dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' \
-                 % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
+        title = 'Accuracy dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d' \
+                % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'])
+        title2 = 'Loss dataset # %d - BATCH_SIZE= %d LR= %f  EPOCHS= %d' \
+                 % (i + 1, args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'])
 
         plt.plot(x, acc_train, color='mediumseagreen')
         plt.plot(x, acc_test, color='lightseagreen')
@@ -88,7 +88,7 @@ def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, ar
     plt.legend(['Test accuracy'], loc='best')
     plt.show()
 
-    csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d GAMMA= %f' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'], args['GAMMA'])
+    csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'])
     pd.DataFrame(all_acc).to_csv('./Results/%s.csv' % csv_name)
 
     print('Accuracy last test', new_acc_test[-1])

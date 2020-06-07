@@ -69,8 +69,7 @@ def update_classes(fc, new_classes):
 
     fc.weight.data[:out_features] = weight
 
-    return fc
-    #TODO: Update n_classes += len(new_classes)
+    return fc, new_out_features
 
 
 def train(net, fc, train_dataloader, test_dataloader):
@@ -120,15 +119,15 @@ def train(net, fc, train_dataloader, test_dataloader):
             _, preds = torch.max(outputs, 1)
 
             loss = criterion(outputs, labels)
-            # if epoch > 0:
-            #     old_outputs = prev_net(inputs)
-            #     old_outputs = old_outputs.view(old_outputs.size(0), -1)
-            #     old_outputs = prev_fc(old_outputs)
-            #
-            #     new_outputs = outputs[:, :-10]
-            #     old_outputs = old_outputs[:, :-10]
-            #     old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
-            #     loss = old_loss + loss
+            if epoch > 0:
+                old_outputs = prev_net(inputs)
+                old_outputs = old_outputs.view(old_outputs.size(0), -1)
+                old_outputs = prev_fc(old_outputs)
+
+                new_outputs = outputs[:, :-10]
+                old_outputs = old_outputs[:, :-10]
+                old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
+                loss = old_loss + loss
 
             loss.backward()
             optimizer.step()
@@ -208,7 +207,7 @@ def incremental_learning():
         train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True, num_workers=4)
         test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
 
-        fc = update_classes(fc, list(set(train_dataset.targets)))
+        fc, new_out_features = update_classes(fc, list(set(train_dataset.targets)))
         net, train_accuracies, train_losses, test_accuracies, test_losses = train(net, fc, train_dataloader, test_dataloader)
 
         new_acc_train_list.append(train_accuracies)
