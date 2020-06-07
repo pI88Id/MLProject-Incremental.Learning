@@ -80,7 +80,7 @@ def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, ar
         plt.legend(['Train loss', 'Test loss'], loc='best')
         plt.show()
 
-    plt.plot(x, all_acc, color='lightseagreen')
+    plt.plot(all_acc, color='lightseagreen')
     plt.title('%s incremental learning accuracy' % (args['name']))
     plt.xticks(np.arange(1, len(all_acc), 1))
     plt.xlabel('Iteration')
@@ -88,7 +88,7 @@ def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, ar
     plt.legend(['Test accuracy'], loc='best')
     plt.show()
 
-    csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d  STEP_SIZE= %d' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'], args['STEP_SIZE'])
+    csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'])
     pd.DataFrame(all_acc).to_csv('./Results/%s.csv' % csv_name)
 
     print('Accuracy last test', new_acc_test[-1])

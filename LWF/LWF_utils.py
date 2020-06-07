@@ -21,7 +21,8 @@ WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
 
 def test(net, fc, test_dataloader):
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     net.to(DEVICE)
     net.train(False)
@@ -35,6 +36,9 @@ def test(net, fc, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
+        labels_hot = torch.eye(fc.out_features)[labels]
+        labels_hot = labels_hot.to(DEVICE)
+
         # Forward Pass
         outputs = net(images)
         outputs = outputs.view(outputs.size(0), -1)
@@ -43,7 +47,8 @@ def test(net, fc, test_dataloader):
         # Get predictions
         _, preds = torch.max(outputs.data, 1)
 
-        loss = criterion(outputs, labels)
+        # loss = criterion(outputs, labels)
+        loss = criterion(outputs, labels_hot)
 
         # statistics
         running_loss += loss.item() * images.size(0)
@@ -76,7 +81,9 @@ def train(net, fc, train_dataloader, test_dataloader):
     prev_net = copy.deepcopy(net).to(DEVICE)
     prev_fc = copy.deepcopy(fc).to(DEVICE)
 
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
+
     parameters_to_optimize = net.parameters()
 
     # START
@@ -105,6 +112,9 @@ def train(net, fc, train_dataloader, test_dataloader):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
+            labels_hot = torch.eye(fc.out_features)[labels]
+            labels_hot = labels_hot.to(DEVICE)
+
             net.train(True)
             fc.train(True)
 
@@ -118,7 +128,9 @@ def train(net, fc, train_dataloader, test_dataloader):
 
             _, preds = torch.max(outputs, 1)
 
-            loss = criterion(outputs, labels)
+            #loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels_hot)
+
             if epoch > 0:
                 old_outputs = prev_net(inputs)
                 old_outputs = old_outputs.view(old_outputs.size(0), -1)
