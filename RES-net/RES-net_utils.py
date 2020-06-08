@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
+import numpy as np
 
 from Cifar100.utils import Cifar100
 from resnet_cifar import resnet32
@@ -58,7 +59,9 @@ def final_test(net, test_dataloader):
     criterion = nn.CrossEntropyLoss()
 
     outputs = []
+    loss = []
 
+    running_loss = 0.0
     running_corrects = 0
     for index, images, labels in test_dataloader:
         images = images.to(DEVICE)
@@ -69,6 +72,8 @@ def final_test(net, test_dataloader):
             n.train(False)
 
             outputs[i] = n(images)
+            loss[i] = criterion(outputs[i], labels)
+        best_net_index = np.asarray(loss).argmax()
 
         preds = classifier(outputs)
 
@@ -76,21 +81,21 @@ def final_test(net, test_dataloader):
         #TODO: Understand what s label and how to adapt to the nn forest
         #TODO: Then write a loss function
 
-        # running_loss += loss.item() * images.size(0)
+        running_loss += loss[best_net_index].item() * images.size(0)
         running_corrects += torch.sum(preds == labels.data).data.item()
 
     # Calculate average losses
-    # epoch_loss = running_loss / float(len(test_dataloader.dataset))
+    epoch_loss = running_loss / float(len(test_dataloader.dataset))
 
     # Calculate Accuracy
     accuracy = running_corrects / float(len(test_dataloader.dataset))
 
-    return accuracy#, epoch_loss
+    return accuracy, epoch_loss
 
 
 #TODO: Define a smart classifier
 def classifier(outputs):
-    _, preds = torch.max(outputs[1].data, 1)
+    _, preds = torch.max(outputs.data, 1)
     return preds
 
 def train(net, train_dataloader, test_dataloader):
