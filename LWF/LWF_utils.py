@@ -19,6 +19,7 @@ LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
+LAMBDA = 0.1
 
 def test(net, fc, test_dataloader):
     # criterion = nn.CrossEntropyLoss()
@@ -139,7 +140,7 @@ def train(net, fc, train_dataloader, test_dataloader):
                 new_outputs = outputs[:, :-10]
                 old_outputs = old_outputs[:, :-10]
                 old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
-                loss = old_loss + loss
+                loss = LAMBDA*old_loss + loss
 
             loss.backward()
             optimizer.step()
