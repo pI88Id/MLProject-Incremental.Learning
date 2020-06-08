@@ -195,7 +195,7 @@ def incremental_learning():
     all_acc_list = []
 
     for i in range(int(NUM_CLASSES / CLASSES_BATCH)):
-        net[i] = copy.deepcopy(resnet32(num_classes=NUM_CLASSES))
+        net.append(resnet32(num_classes=NUM_CLASSES))
 
         print('-' * 30)
         print(f'**** ITERATION { i + 1 } ****')
