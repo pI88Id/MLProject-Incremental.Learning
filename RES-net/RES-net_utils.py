@@ -22,7 +22,7 @@ WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
 
 def test(net, test_dataloader):
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     net.to(DEVICE)
     net.train(False)
@@ -33,6 +33,9 @@ def test(net, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
+        labels_hot = torch.eye(net.fc.out_features)[labels]
+        labels_hot = labels_hot.to(DEVICE)
+
         # Forward Pass
         outputs = net(images)
 
@@ -40,7 +43,7 @@ def test(net, test_dataloader):
         _, preds = torch.max(outputs.data, 1)
 
         # loss = criterion(outputs, labels)
-        loss = criterion(outputs, labels)
+        loss = criterion(outputs, labels_hot)
 
         # statistics
         running_loss += loss.item() * images.size(0)
@@ -56,6 +59,7 @@ def test(net, test_dataloader):
 
 # train function
 def final_test(net, test_dataloader):
+    # criterion = nn.BCEWithLogitsLoss()
     criterion = nn.CrossEntropyLoss()
 
     outputs = []
@@ -67,10 +71,16 @@ def final_test(net, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
+        #TODO: change the 10
+        # labels_hot = torch.eye(10)[labels]
+        # labels_hot = labels_hot.to(DEVICE)
+
         for i, n in enumerate(net):
             n.to(DEVICE)
             n.train(False)
 
+            # We compute the loss for each output in order to choose the nn
+            # with the smallest loss value
             outputs[i] = n(images)
             loss[i] = criterion(outputs[i], labels)
         best_net_index = np.asarray(loss).argmax()
@@ -99,7 +109,7 @@ def classifier(outputs):
     return preds
 
 def train(net, train_dataloader, test_dataloader):
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     parameters_to_optimize = net.parameters()
 
@@ -128,6 +138,9 @@ def train(net, train_dataloader, test_dataloader):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
+            labels_hot = torch.eye(net.fc.out_features)[labels]
+            labels_hot = labels_hot.to(DEVICE)
+
             net.train(True)
 
             # zero the parameter gradients
@@ -139,7 +152,7 @@ def train(net, train_dataloader, test_dataloader):
             _, preds = torch.max(outputs, 1)
 
             #loss = criterion(outputs, labels)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels_hot)
 
             loss.backward()
             optimizer.step()
@@ -186,15 +199,17 @@ def incremental_learning():
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    net = resnet32(num_classes=NUM_CLASSES)
-
     new_acc_train_list = []
     new_loss_train_list = []
     new_acc_test_list = []
     new_loss_test_list = []
     all_acc_list = []
 
+    net = []
+
     for i in range(int(NUM_CLASSES / CLASSES_BATCH)):
+        net[i] = resnet32(num_classes=NUM_CLASSES)
+
         print('-' * 30)
         print(f'**** ITERATION {i + 1} ****')
         print('-' * 30)
