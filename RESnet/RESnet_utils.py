@@ -27,6 +27,7 @@ NUM_EPOCHS = 70
 def test(net, test_dataloader):
     criterion = nn.CrossEntropyLoss()
 
+
     net.to(DEVICE)
     net.train(False)
 
@@ -194,10 +195,10 @@ def incremental_learning():
     all_acc_list = []
 
     for i in range(int(NUM_CLASSES / CLASSES_BATCH)):
-        net[i] = resnet32(num_classes=NUM_CLASSES)
+        net[i] = copy.deepcopy(resnet32(num_classes=NUM_CLASSES))
 
         print('-' * 30)
-        print(f'**** ITERATION {i + 1} ****')
+        print(f'**** ITERATION { i + 1 } ****')
         print('-' * 30)
 
         print('Loading the Datasets ...')
