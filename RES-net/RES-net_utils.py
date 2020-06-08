@@ -13,7 +13,7 @@ from resnet_cifar import resnet32
 from Cifar100.utils import Cifar100
 
 DEVICE = 'cuda'
-NUM_CLASSES = 100
+NUM_CLASSES = 10
 BATCH_SIZE = 128
 CLASSES_BATCH = 10
 STEPDOWN_EPOCHS = [49, 63]

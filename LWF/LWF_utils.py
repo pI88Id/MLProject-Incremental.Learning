@@ -131,7 +131,7 @@ def train(net, fc, train_dataloader, test_dataloader):
             #loss = criterion(outputs, labels)
             loss = criterion(outputs, labels_hot)
 
-            if epoch > 0:
+            if not fc.out_features == 10:
                 old_outputs = prev_net(inputs)
                 old_outputs = old_outputs.view(old_outputs.size(0), -1)
                 old_outputs = prev_fc(old_outputs)
