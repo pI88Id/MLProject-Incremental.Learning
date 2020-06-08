@@ -1,14 +1,16 @@
-import copy
-
 import torch
+
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
-from torchvision import transforms
+
 import numpy as np
 
-from Cifar100.utils import Cifar100
+from torchvision import transforms
+from torch.utils.data import DataLoader
+import copy
+
 from resnet_cifar import resnet32
+from Cifar100.utils import Cifar100
 
 DEVICE = 'cuda'
 NUM_CLASSES = 100
@@ -21,8 +23,9 @@ MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
 
-def test(net, test_dataloader):
-    criterion = nn.BCEWithLogitsLoss()
+
+def test(net, test_dataloader, n_classes=100):
+    criterion = nn.CrossEntropyLoss()
 
     net.to(DEVICE)
     net.train(False)
@@ -33,17 +36,12 @@ def test(net, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
-        labels_hot = torch.eye(net.fc.out_features)[labels]
-        labels_hot = labels_hot.to(DEVICE)
-
         # Forward Pass
         outputs = net(images)
 
         # Get predictions
         _, preds = torch.max(outputs.data, 1)
-
-        # loss = criterion(outputs, labels)
-        loss = criterion(outputs, labels_hot)
+        loss = criterion(outputs, labels)
 
         # statistics
         running_loss += loss.item() * images.size(0)
@@ -56,10 +54,8 @@ def test(net, test_dataloader):
 
     return accuracy, epoch_loss
 
-
 # train function
 def final_test(net, test_dataloader):
-    # criterion = nn.BCEWithLogitsLoss()
     criterion = nn.CrossEntropyLoss()
 
     outputs = []
@@ -83,9 +79,9 @@ def final_test(net, test_dataloader):
             # with the smallest loss value
             outputs[i] = n(images)
             loss[i] = criterion(outputs[i], labels)
-        best_net_index = np.asarray(loss).argmax()
+        best_net_index = np.asarray(loss).argmin()
 
-        preds = classifier(outputs)
+        preds = classifier(outputs[best_net_index])
 
         #TODO: overwrite the output with normalized values (for loss function)
         #TODO: Understand what s label and how to adapt to the nn forest
@@ -108,12 +104,12 @@ def classifier(outputs):
     _, preds = torch.max(outputs.data, 1)
     return preds
 
-def train(net, train_dataloader, test_dataloader):
-    criterion = nn.BCEWithLogitsLoss()
+
+# train function
+def train(net, train_dataloader, test_dataloader, n_classes=100):
+    criterion = nn.CrossEntropyLoss()
 
     parameters_to_optimize = net.parameters()
-
-    # START
     optimizer = optim.SGD(parameters_to_optimize, lr=LR, weight_decay=WEIGHT_DECAY)
 
     train_accuracies = []
@@ -138,22 +134,13 @@ def train(net, train_dataloader, test_dataloader):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
-            labels_hot = torch.eye(net.fc.out_features)[labels]
-            labels_hot = labels_hot.to(DEVICE)
-
             net.train(True)
-
             # zero the parameter gradients
             optimizer.zero_grad()
-
             # forward
             outputs = net(inputs)
-
             _, preds = torch.max(outputs, 1)
-
-            #loss = criterion(outputs, labels)
-            loss = criterion(outputs, labels_hot)
-
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
@@ -199,13 +186,13 @@ def incremental_learning():
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
+    net = []
+
     new_acc_train_list = []
     new_loss_train_list = []
     new_acc_test_list = []
     new_loss_test_list = []
     all_acc_list = []
-
-    net = []
 
     for i in range(int(NUM_CLASSES / CLASSES_BATCH)):
         net[i] = resnet32(num_classes=NUM_CLASSES)
@@ -239,12 +226,13 @@ def incremental_learning():
         print('-' * 30)
 
         # Creating dataset for test on previous classes
-        # previous_classes = np.array([])
+        previous_classes = np.array([])
 
         all_classes_dataset = Cifar100(classes=range(0, (i + 1) * 10), train=False, transform=transform_test)
 
         # Prepare Dataloader
-        test_all_dataloader = DataLoader(all_classes_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
+        test_all_dataloader = DataLoader(all_classes_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False,
+                                         num_workers=4)
 
         print('All classes')
 
@@ -253,4 +241,3 @@ def incremental_learning():
         print('-' * 30)
 
     return new_acc_train_list, new_loss_train_list, new_acc_test_list, new_loss_test_list, all_acc_list
-

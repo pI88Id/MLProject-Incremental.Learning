@@ -24,7 +24,6 @@ WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
 
 def test(net, test_dataloader, n_classes=100):
-
   criterion = nn.BCEWithLogitsLoss()
 
   net.to(DEVICE)
