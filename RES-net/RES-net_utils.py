@@ -24,7 +24,7 @@ WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
 
 
-def test(net, test_dataloader, n_classes=100):
+def test(net, test_dataloader):
     criterion = nn.CrossEntropyLoss()
 
     net.to(DEVICE)
@@ -106,9 +106,8 @@ def classifier(outputs):
 
 
 # train function
-def train(net, train_dataloader, test_dataloader, n_classes=100):
+def train(net, train_dataloader, test_dataloader):
     criterion = nn.CrossEntropyLoss()
-
     parameters_to_optimize = net.parameters()
     optimizer = optim.SGD(parameters_to_optimize, lr=LR, weight_decay=WEIGHT_DECAY)
 
@@ -231,8 +230,7 @@ def incremental_learning():
         all_classes_dataset = Cifar100(classes=range(0, (i + 1) * 10), train=False, transform=transform_test)
 
         # Prepare Dataloader
-        test_all_dataloader = DataLoader(all_classes_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False,
-                                         num_workers=4)
+        test_all_dataloader = DataLoader(all_classes_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
 
         print('All classes')
 
