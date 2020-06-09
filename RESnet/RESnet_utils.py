@@ -71,18 +71,19 @@ def final_test(net, test_dataloader):
         #TODO: change the 10
         # labels_hot = torch.eye(10)[labels]
         # labels_hot = labels_hot.to(DEVICE)
-
+        output=0
         for i, n in enumerate(net):
             n.to(DEVICE)
             n.train(False)
 
             # We compute the loss for each output in order to choose the nn
             # with the smallest loss value
-            outputs[i] = n(images)
-            loss[i] = criterion(outputs[i], labels)
+            output = n(images)
+            outputs.append(output)
+            loss.append(criterion(output, labels))
         best_net_index = np.asarray(loss).argmin()
 
-        preds = classifier(outputs[best_net_index])
+        preds = classifier(output)#s[best_net_index])
 
         #TODO: overwrite the output with normalized values (for loss function)
         #TODO: Understand what s label and how to adapt to the nn forest
@@ -194,7 +195,7 @@ def incremental_learning():
     new_loss_test_list = []
     all_acc_list = []
 
-    for i in range(int(NUM_CLASSES / CLASSES_BATCH)):
+    for i in range(CLASSES_BATCH):
         net.append(resnet32(num_classes=NUM_CLASSES))
 
         print('-' * 30)

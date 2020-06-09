@@ -88,7 +88,7 @@ def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, ar
     plt.legend(['Test accuracy'], loc='best')
     plt.show()
 
-    csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'])
-    pd.DataFrame(all_acc).to_csv('./Results/%s.csv' % csv_name)
+    # csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'])
+    # pd.DataFrame(all_acc).to_csv('./Results/%s.csv' % csv_name)
 
     print('Accuracy last test', new_acc_test[-1])
