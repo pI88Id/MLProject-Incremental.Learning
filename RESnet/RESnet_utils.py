@@ -6,6 +6,7 @@ import torch.optim as optim
 import numpy as np
 
 from torchvision import transforms
+from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import copy
 
@@ -45,7 +46,7 @@ def test(net, test_dataloader, n_net):
 
         # Get predictions
         _, preds = torch.max(outputs.data, 1)
-        preds = preds + n_net * 10
+        preds = Variable(preds) + n_net * 10
 
         loss = criterion(outputs, labels)
 
