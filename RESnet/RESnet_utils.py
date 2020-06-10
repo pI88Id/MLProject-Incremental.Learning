@@ -21,12 +21,12 @@ STEPDOWN_FACTOR = 5
 LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
-NUM_EPOCHS = 70
+NUM_EPOCHS = 7
 
 
-def test(net, test_dataloader):
+def test(net, test_dataloader, n_net):
     criterion = nn.CrossEntropyLoss()
-
+    # criterion = nn.BCEWithLogitsLoss()
 
     net.to(DEVICE)
     net.train(False)
@@ -37,11 +37,16 @@ def test(net, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
+        # labels_hot = torch.eye(n_classes)[labels]
+        # labels_hot = labels_hot.to(DEVICE)
+
         # Forward Pass
         outputs = net(images)
 
         # Get predictions
         _, preds = torch.max(outputs.data, 1)
+        preds = preds + n_net * 10
+
         loss = criterion(outputs, labels)
 
         # statistics
@@ -59,38 +64,39 @@ def test(net, test_dataloader):
 def final_test(net, test_dataloader):
     criterion = nn.CrossEntropyLoss()
 
-    outputs = []
-    loss = []
-
     running_loss = 0.0
     running_corrects = 0
     for index, images, labels in test_dataloader:
-        images = images.to(DEVICE)
-        labels = labels.to(DEVICE)
+        # for image, label in zip(images, labels):
+            image = images.to(DEVICE)
+            label = labels.to(DEVICE)
 
-        #TODO: change the 10
-        # labels_hot = torch.eye(10)[labels]
-        # labels_hot = labels_hot.to(DEVICE)
-        output=0
-        for i, n in enumerate(net):
-            n.to(DEVICE)
-            n.train(False)
+            outputs = []
+            loss = []
 
-            # We compute the loss for each output in order to choose the nn
-            # with the smallest loss value
-            output = n(images)
-            outputs.append(output)
-            loss.append(criterion(output, labels))
-        best_net_index = np.asarray(loss).argmin()
+            #TODO: change the 10
+            # labels_hot = torch.eye(10)[labels]
+            # labels_hot = labels_hot.to(DEVICE)
+            for i, n in enumerate(net):
+                n.to(DEVICE)
+                n.train(False)
 
-        preds = classifier(output)#s[best_net_index])
+                # We compute the loss for each output in order to choose the nn
+                # with the smallest loss value
+                output = n(image)
+                outputs.append(output)
+                loss.append(criterion(output, label))
 
-        #TODO: overwrite the output with normalized values (for loss function)
-        #TODO: Understand what s label and how to adapt to the nn forest
-        #TODO: Then write a loss function
+            best_net_index = np.asarray(loss).argmin()
+            pred = classifier(outputs[best_net_index-1])
+            pred = pred + (best_net_index-1) * 10
 
-        running_loss += loss[best_net_index].item() * images.size(0)
-        running_corrects += torch.sum(preds == labels.data).data.item()
+            #TODO: overwrite the output with normalized values (for loss function)
+            #TODO: Understand what s label and how to adapt to the nn forest
+            #TODO: Then write a loss function
+
+            running_loss += loss[best_net_index].item() * images.size(0)
+            running_corrects += torch.sum(pred == label.data).data.item()
 
     # Calculate average losses
     epoch_loss = running_loss / float(len(test_dataloader.dataset))
@@ -108,8 +114,10 @@ def classifier(outputs):
 
 
 # train function
-def train(net, train_dataloader, test_dataloader):
+def train(net, train_dataloader, test_dataloader, n_net):
     criterion = nn.CrossEntropyLoss()
+    # criterion = nn.BCEWithLogitsLoss()
+
     parameters_to_optimize = net.parameters()
     optimizer = optim.SGD(parameters_to_optimize, lr=LR, weight_decay=WEIGHT_DECAY)
 
@@ -135,12 +143,17 @@ def train(net, train_dataloader, test_dataloader):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
+            # labels_hot = torch.eye(n_classes)[labels]
+            # labels_hot = labels_hot.to(DEVICE)
+
             net.train(True)
             # zero the parameter gradients
             optimizer.zero_grad()
             # forward
             outputs = net(inputs)
             _, preds = torch.max(outputs, 1)
+            preds = preds +  n_net*10
+
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -160,7 +173,7 @@ def train(net, train_dataloader, test_dataloader):
                 print('Learning rate:{}'.format(param_group['lr']))
             print('-' * 30)
 
-        epoch_test_accuracy, epoch_test_loss = test(net, test_dataloader)
+        epoch_test_accuracy, epoch_test_loss = test(net, test_dataloader, n_net)
 
         train_accuracies.append(epoch_acc)
         train_losses.append(epoch_loss)
@@ -196,10 +209,12 @@ def incremental_learning():
     all_acc_list = []
 
     for i in range(CLASSES_BATCH):
-        net.append(resnet32(num_classes=NUM_CLASSES))
+        n = resnet32(num_classes=NUM_CLASSES)
+        net.append(n)
+
 
         print('-' * 30)
-        print(f'**** ITERATION { i + 1 } ****')
+        print(f'**** ITERATION {i + 1} ****')
         print('-' * 30)
 
         print('Loading the Datasets ...')
@@ -216,7 +231,7 @@ def incremental_learning():
         train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True, num_workers=4)
         test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
 
-        net[i], train_accuracies, train_losses, test_accuracies, test_losses = train(net[i], train_dataloader, test_dataloader)
+        n, train_accuracies, train_losses, test_accuracies, test_losses = train(n, train_dataloader, test_dataloader, i)
 
         new_acc_train_list.append(train_accuracies)
         new_loss_train_list.append(train_losses)
@@ -225,9 +240,6 @@ def incremental_learning():
 
         print('Testing ...')
         print('-' * 30)
-
-        # Creating dataset for test on previous classes
-        previous_classes = np.array([])
 
         all_classes_dataset = Cifar100(classes=range(0, (i + 1) * 10), train=False, transform=transform_test)
 
