@@ -91,7 +91,7 @@ def plot(new_acc_train, new_acc_test, new_loss_train, new_loss_test, all_acc, ar
     # csv_name = '%s - BATCH_SIZE= %d LR= %f  EPOCHS= %d' % (args['name'], args['BATCH_SIZE'], args['LR'], args['NUM_EPOCHS'])
     # pd.DataFrame(all_acc).to_csv('./Results/%s.csv' % csv_name)
 
-    print('Accuracy last test', new_acc_test[-1]
+    print('Accuracy last test', new_acc_test[-1])
 
 def plot2(new_acc_test, all_acc, args):
   

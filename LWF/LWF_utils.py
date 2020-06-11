@@ -6,11 +6,11 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from Cifar100.utils import Cifar100
-from resnet_cifar import resnet32
+from ..Cifar100.utils import Cifar100
+from ..resnet_cifar import resnet32
 
 DEVICE = 'cuda'
-NUM_CLASSES = 100
+NUM_CLASSES = 10
 BATCH_SIZE = 128
 CLASSES_BATCH = 10
 STEPDOWN_EPOCHS = [49, 63]
@@ -22,8 +22,8 @@ NUM_EPOCHS = 70
 LAMBDA = 1
 
 def test(net, test_dataloader):
-    criterion = nn.CrossEntropyLoss()
-    # criterion = nn.BCEWithLogitsLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     net.to(DEVICE)
     net.train(False)
@@ -34,8 +34,8 @@ def test(net, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
-        # labels = torch.eye(net.fc.out_features)[labels]
-        # labels = labels.to(DEVICE)
+        labels_hot = torch.eye(net.fc.out_features+10)[labels]
+        labels_hot = labels_hot.to(DEVICE)
 
         # Forward Pass
         outputs = net(images)
@@ -44,7 +44,7 @@ def test(net, test_dataloader):
         _, preds = torch.max(outputs.data, 1)
 
         # loss = criterion(outputs, labels)
-        loss = criterion(outputs, labels)
+        loss = criterion(outputs, labels_hot)
 
         # statistics
         running_loss += loss.item() * images.size(0)
@@ -59,25 +59,25 @@ def test(net, test_dataloader):
 
 
 # train function
-def update_classes(fc, new_classes):
-    in_features = fc.in_features
-    out_features = fc.out_features
-    weight = fc.weight.data
+def update_classes(net, n_new_classes):
+    in_features = net.fc.in_features
+    out_features = net.fc.out_features
+    weight = net.fc.weight.data
 
-    new_out_features = fc.out_features + len(new_classes)
+    new_out_features = out_features + n_new_classes
 
-    fc = nn.Linear(in_features, new_out_features, bias=False)
+    net.fc = nn.Linear(in_features, new_out_features, bias=False)
 
-    fc.weight.data[:out_features] = weight
+    net.fc.weight.data[:out_features] = weight
 
-    return fc, new_out_features
+    return net, new_out_features
 
 
 def train(net, train_dataloader, test_dataloader):
     prev_net = copy.deepcopy(net).to(DEVICE)
 
-    criterion = nn.CrossEntropyLoss()
-    # criterion = nn.BCEWithLogitsLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     parameters_to_optimize = net.parameters()
 
@@ -106,8 +106,8 @@ def train(net, train_dataloader, test_dataloader):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
-            # labels = torch.eye(net.fc.out_features)[labels]
-            # labels = labels.to(DEVICE)
+            labels_hot = torch.eye(net.fc.out_features+10)[labels]
+            labels_hot = labels_hot.to(DEVICE)
 
             net.train(True)
 
@@ -119,8 +119,8 @@ def train(net, train_dataloader, test_dataloader):
 
             _, preds = torch.max(outputs, 1)
 
-            #loss = criterion(outputs, labels)
-            loss = criterion(outputs, labels)
+            # loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels_hot)
 
             if not net.fc.out_features == 10:
                 old_outputs = prev_net(inputs)
@@ -189,7 +189,7 @@ def incremental_learning():
     new_loss_test_list = []
     all_acc_list = []
 
-    for i in range(int(NUM_CLASSES / CLASSES_BATCH)):
+    for i in range(CLASSES_BATCH):
         print('-' * 30)
         print(f'**** ITERATION {i + 1} ****')
         print('-' * 30)
@@ -208,7 +208,6 @@ def incremental_learning():
         train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True, num_workers=4)
         test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
 
-        net, new_out_features = update_classes(net.fc, list(set(train_dataset.targets)))
         net, train_accuracies, train_losses, test_accuracies, test_losses = train(net, train_dataloader, test_dataloader)
 
         new_acc_train_list.append(train_accuracies)
@@ -230,6 +229,9 @@ def incremental_learning():
         print('All classes')
 
         all_acc_list.append(test(net, test_all_dataloader))
+
+        net, new_out_features = update_classes(net, 10)
+        print('new_out_features', new_out_features)
 
         print('-' * 30)
 
