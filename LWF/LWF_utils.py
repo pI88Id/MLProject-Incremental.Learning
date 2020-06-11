@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from ..Cifar100.utils import Cifar100
+from .Cifar100.utils import Cifar100
 from ..resnet_cifar import resnet32
 
 DEVICE = 'cuda'
