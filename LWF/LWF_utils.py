@@ -63,14 +63,14 @@ def update_classes(net, n_new_classes):
     in_features = net.fc.in_features
     out_features = net.fc.out_features
     weight = net.fc.weight.data
-    bias = net.fc.bias.data
+    bias = net.fc.bias
 
     new_out_features = out_features + n_new_classes
 
     net.fc = nn.Linear(in_features, new_out_features, bias=False)
 
     net.fc.weight.data[:out_features] = weight
-    net.fc.bias.data[:out_features] = bias
+    net.fc.bias[:out_features] = bias
 
     return net, new_out_features
 
