@@ -124,7 +124,7 @@ def train(net, train_dataloader, test_dataloader):
             if net.fc.out_features != 10:
                 with torch.no_grad():
                     old_outputs = torch.sigmoid(prev_net(inputs))
-                labels_hot = torch.cat((old_outputs, labels_hot[: net.fc.out_features - 10:]), 1)
+                labels_hot = torch.cat((old_outputs, labels_hot[:, net.fc.out_features - 10:]), 1)
                 # new_outputs = outputs[:, :-10]
                 # old_outputs = old_outputs[:, :-10]
                 # old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
