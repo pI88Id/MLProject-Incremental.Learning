@@ -68,36 +68,38 @@ def final_test(net, test_dataloader):
     running_loss = 0.0
     running_corrects = 0
     for index, images, labels in test_dataloader:
-        # for image, label in zip(images, labels):
-            image = images.to(DEVICE)
-            label = labels.to(DEVICE)
+        images = images.to(DEVICE)
+        labels = labels.to(DEVICE)
 
-            outputs = []
-            loss = []
+        outputs = []
+        loss = []
 
-            #TODO: change the 10
-            # labels_hot = torch.eye(10)[labels]
-            # labels_hot = labels_hot.to(DEVICE)
-            for i, n in enumerate(net):
-                n.to(DEVICE)
-                n.train(False)
+        #TODO: change the 10
+        # labels_hot = torch.eye(10)[labels]
+        # labels_hot = labels_hot.to(DEVICE)
+        for i, n in enumerate(net):
+            n[i].to(DEVICE)
+            n[i].train(False)
 
-                # We compute the loss for each output in order to choose the nn
-                # with the smallest loss value
-                output = n(image)
-                outputs.append(output)
-                loss.append(criterion(output, label))
+            # We compute the loss for each output in order to choose the nn
+            # with the smallest loss value
+            outputs = net[i](images)
 
-            best_net_index = np.asarray(loss).argmin()
-            pred = classifier(outputs[best_net_index-1])
-            pred = pred + (best_net_index-1) * 10
+            l = []
+            for out, lab in zip(outputs, labels):
+                c = criterion(outputs, labels)
+                l.append(c)
+            loss.append(l)
 
-            #TODO: overwrite the output with normalized values (for loss function)
-            #TODO: Understand what s label and how to adapt to the nn forest
-            #TODO: Then write a loss function
+        best_net_index = np.asarray(loss).argmin(axis=0)
+        preds = classifier(outputs[best_net_index])
 
-            running_loss += loss[best_net_index].item() * images.size(0)
-            running_corrects += torch.sum(pred == label.data).data.item()
+        #TODO: overwrite the output with normalized values (for loss function)
+        #TODO: Understand what s label and how to adapt to the nn forest
+        #TODO: Then write a loss function
+
+        # running_loss += loss[best_net_index].item() * images.size(0)
+        running_corrects += torch.sum(preds == labels.data).data.item()
 
     # Calculate average losses
     epoch_loss = running_loss / float(len(test_dataloader.dataset))
@@ -210,8 +212,7 @@ def incremental_learning():
     all_acc_list = []
 
     for i in range(CLASSES_BATCH):
-        n = resnet32(num_classes=NUM_CLASSES)
-        net.append(n)
+        net.append(resnet32(num_classes=NUM_CLASSES))
 
 
         print('-' * 30)
@@ -232,7 +233,7 @@ def incremental_learning():
         train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True, num_workers=4)
         test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
 
-        n, train_accuracies, train_losses, test_accuracies, test_losses = train(n, train_dataloader, test_dataloader, i)
+        net[i], train_accuracies, train_losses, test_accuracies, test_losses = train(net[i], train_dataloader, test_dataloader, i)
 
         new_acc_train_list.append(train_accuracies)
         new_loss_train_list.append(train_losses)
