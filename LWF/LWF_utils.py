@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from .Cifar100.utils import Cifar100
+from ..Cifar100.utils import Cifar100
 from ..resnet_cifar import resnet32
 
 DEVICE = 'cuda'
@@ -75,7 +75,7 @@ def update_classes(net, n_new_classes):
     return net, new_out_features
 
 
-def train(net, train_dataloader, test_dataloader, n_classes):
+def train(net, train_dataloader, test_dataloader):
     prev_net = copy.deepcopy(net).to(DEVICE)
 
     # criterion = nn.CrossEntropyLoss()
@@ -108,7 +108,7 @@ def train(net, train_dataloader, test_dataloader, n_classes):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
-            labels_hot = torch.eye(n_classes)[labels]
+            labels_hot = torch.eye(net.fc.out_features)[labels]
             labels_hot = labels_hot.to(DEVICE)
 
             net.train(True)
@@ -121,12 +121,12 @@ def train(net, train_dataloader, test_dataloader, n_classes):
 
             _, preds = torch.max(outputs, 1)
 
-            if n_classes != 10:
+            if net.fc.out_features != 10:
                 with torch.no_grad():
                     old_outputs = torch.sigmoid(prev_net(inputs))
-                labels_hot = torch.cat((old_outputs, labels_hot[: n_classes - 10:]), 1)
-                new_outputs = outputs[:, :-10]
-                old_outputs = old_outputs[:, :-10]
+                labels_hot = torch.cat((old_outputs, labels_hot[: net.fc.out_features - 10:]), 1)
+                # new_outputs = outputs[:, :-10]
+                # old_outputs = old_outputs[:, :-10]
                 # old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
                 # loss = LAMBDA*old_loss + loss
 
