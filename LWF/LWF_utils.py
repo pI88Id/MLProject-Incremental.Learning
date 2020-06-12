@@ -18,7 +18,7 @@ STEPDOWN_FACTOR = 5
 LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
-NUM_EPOCHS = 70
+NUM_EPOCHS = 7
 LAMBDA = 1
 
 def test(net, test_dataloader):
@@ -63,14 +63,14 @@ def update_classes(net, n_new_classes):
     in_features = net.fc.in_features
     out_features = net.fc.out_features
     weight = net.fc.weight.data
-    bias = net.fc.bias
+    # bias = net.fc.bias.data
 
     new_out_features = out_features + n_new_classes
 
     net.fc = nn.Linear(in_features, new_out_features, bias=False)
 
     net.fc.weight.data[:out_features] = weight
-    net.fc.bias[:out_features] = bias
+    # net.fc.bias.data[:out_features] = bias
 
     return net, new_out_features
 
