@@ -34,7 +34,7 @@ def test(net, test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
-        labels_hot = torch.eye(net.fc.out_features+10)[labels]
+        labels_hot = torch.eye(net.fc.out_features)[labels]
         labels_hot = labels_hot.to(DEVICE)
 
         # Forward Pass
