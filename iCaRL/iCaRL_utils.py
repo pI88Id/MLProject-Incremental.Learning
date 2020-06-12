@@ -10,6 +10,9 @@ from torch.nn import BCEWithLogitsLoss
 
 from torchvision import transforms
 
+from ..Cifar100.utils import Cifar100
+from ..resnet_cifar import resnet32
+
 #bisogna importare resnet e le utils con dataset e funzioni di plot######################################################
 
 class iCaRL():
@@ -246,7 +249,7 @@ class iCaRL():
           # find the m sample features which mean is the closest to the one of the entire class
           
           exemplars_features = []
-          
+          min_index = 0
           for i in range(m):
             
             min_distance = float('inf')

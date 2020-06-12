@@ -63,17 +63,19 @@ def update_classes(net, n_new_classes):
     in_features = net.fc.in_features
     out_features = net.fc.out_features
     weight = net.fc.weight.data
+    bias = net.fc.weight.data
 
     new_out_features = out_features + n_new_classes
 
     net.fc = nn.Linear(in_features, new_out_features, bias=False)
 
     net.fc.weight.data[:out_features] = weight
+    net.fc.bias.data[:out_features] = bias
 
     return net, new_out_features
 
 
-def train(net, train_dataloader, test_dataloader):
+def train(net, train_dataloader, test_dataloader, n_classes):
     prev_net = copy.deepcopy(net).to(DEVICE)
 
     # criterion = nn.CrossEntropyLoss()
@@ -106,7 +108,7 @@ def train(net, train_dataloader, test_dataloader):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
-            labels_hot = torch.eye(net.fc.out_features+10)[labels]
+            labels_hot = torch.eye(n_classes)[labels]
             labels_hot = labels_hot.to(DEVICE)
 
             net.train(True)
@@ -119,16 +121,17 @@ def train(net, train_dataloader, test_dataloader):
 
             _, preds = torch.max(outputs, 1)
 
-            # loss = criterion(outputs, labels)
-            loss = criterion(outputs, labels_hot)
-
-            if not net.fc.out_features == 10:
-                old_outputs = prev_net(inputs)
-
+            if n_classes != 10:
+                with torch.no_grad():
+                    old_outputs = torch.sigmoid(prev_net(inputs))
+                labels_hot = torch.cat((old_outputs, labels_hot[: n_classes - 10:]), 1)
                 new_outputs = outputs[:, :-10]
                 old_outputs = old_outputs[:, :-10]
-                old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
-                loss = LAMBDA*old_loss + loss
+                # old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
+                # loss = LAMBDA*old_loss + loss
+
+            # loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels_hot)
 
             loss.backward()
             optimizer.step()
