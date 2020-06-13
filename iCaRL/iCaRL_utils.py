@@ -21,6 +21,63 @@ class iCaRL():
         self.memory = memory
         self.params = params
         self.device = 'cuda'
+        
+    def different_classifier(self, data, exemplars, net, classifier):
+      
+      print('-'*30)
+      print(f'**** Classification: Different classifier ****')
+      print('-'*30)
+      
+      train_data = []
+      targets = []
+
+      print(f'**** fitting the classifier on the exemplars... ****')
+      print('-'*30)
+      for key in exemplars:
+
+        loader = DataLoader(exemplars[key], batch_size=1024, shuffle=False, num_workers=4, drop_last=False)
+        mean = torch.zeros((1,64),device=self.device)
+
+        for _, images, labels in loader:
+          with torch.no_grad():
+
+            images = images.to(self.device)
+            outputs = net(images,features=True)
+            
+            for output,label in zip(outputs,labels):
+              train_data.append(np.array(output.cpu()))
+              targets.append(np.array(label))
+    
+      classifier.fit(train_data, targets)
+
+      loader = DataLoader(data, batch_size=1024, shuffle=False, num_workers=4, drop_last=False)
+
+      running_correct = 0.0
+      print(f'**** predicting... ****')
+      print('-'*30)
+
+      for _, images, labels in loader:
+        
+        images = images.to(self.device)
+        
+        with torch.no_grad():
+
+          outputs = net(images,features=True)
+          preds = []
+
+          for output in outputs:
+
+            pred = classifier.predict([np.array(output.cpu())])
+            preds.append(pred)
+          
+          for label, pred in zip(labels, preds):
+            if label == pred[0]:
+              running_correct += 1
+      
+      accuracy = running_correct/len(data)
+      print('Accuracy:{:.4f}'.format(accuracy))
+
+      return accuracy    
 
     def NME(self, data, exemplars, net, n_classes):
       print('-'*30)
@@ -359,11 +416,18 @@ class iCaRL():
 
         exemplars_as_list = [item for class_exemplars in exemplars.values() for item in class_exemplars]
 
-        # compute accuracy on the new class batch
-        accuracy_new.append(self.NME(test_dataset, exemplars, net, n_classes))
+        if(classifier is None):
+          # compute accuracy on the new class batch
+          accuracy_new.append(self.NME(test_dataset, exemplars, net, n_classes))
 
-        # compute accuracy on all the classes seen so far
-        test_dataset_sofar = Cifar100(classes=range(0, (i + 1)*10), train=False, transform=transform_test)
-        accuracy_all.append(self.NME(test_dataset_sofar, exemplars, net, n_classes))
+          # compute accuracy on all the classes seen so far
+          test_dataset_sofar = Cifar100(classes=range(0, (i + 1)*10), train=False, transform=transform_test)
+          accuracy_all.append(self.NME(test_dataset_sofar, exemplars, net, n_classes))
+        else:
+          accuracy_new.append(self.different_classifier(test_dataset, exemplars, net, classifier))
+
+          # compute accuracy on all the classes seen so far
+          test_dataset_sofar = Cifar100(classes=range(0, (i + 1)*10), train=False, transform=transform_test)
+          accuracy_all.append(self.different_classifier(test_dataset_sofar, exemplars, net, classifier))
 
       return accuracy_new, accuracy_all
