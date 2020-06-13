@@ -53,7 +53,7 @@ def test(net, test_dataloader, n_net):
 
         # statistics
         running_loss += loss.item() * images.size(0)
-        running_corrects += torch.sum(preds == labels.data - n_net*10).data.item()
+        running_corrects += torch.sum(preds == labels.data).data.item()
 
     # Calculate average losses
     epoch_loss = running_loss / float(len(test_dataloader.dataset))
@@ -166,7 +166,7 @@ def train(net, train_dataloader, test_dataloader, n_net):
 
             # statistics
             running_loss += loss.item() * inputs.size(0)
-            running_corrects_train += torch.sum(preds == labels.data - n_net*10).data.item()
+            running_corrects_train += torch.sum(preds == labels.data).data.item()
 
         # Calculate average losses
         epoch_loss = running_loss / float(len(train_dataloader.dataset))

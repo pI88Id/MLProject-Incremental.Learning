@@ -122,7 +122,6 @@ def train(net, train_dataloader, test_dataloader, n_classes):
             _, preds = torch.max(outputs, 1)
 
             if n_classes != 10:
-                prev_net.eval()
                 with torch.no_grad():
                     old_outputs = torch.sigmoid(prev_net(inputs)).to(DEVICE)
                 labels_hot = torch.cat((old_outputs[:, :-10], labels_hot[:, -10:]), 1)
