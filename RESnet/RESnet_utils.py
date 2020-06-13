@@ -16,13 +16,14 @@ from Cifar100.utils import Cifar100
 DEVICE = 'cuda'
 NUM_CLASSES = 10
 BATCH_SIZE = 128
+TEST_BATCH_SIZE = 2
 CLASSES_BATCH = 10
 STEPDOWN_EPOCHS = [49, 63]
 STEPDOWN_FACTOR = 5
 LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
-NUM_EPOCHS = 7
+NUM_EPOCHS = 70
 
 
 def test(net, test_dataloader, n_net):
@@ -78,18 +79,19 @@ def final_test(net, test_dataloader):
         # labels_hot = torch.eye(10)[labels]
         # labels_hot = labels_hot.to(DEVICE)
         for i, n in enumerate(net):
-            n[i].to(DEVICE)
-            n[i].train(False)
+            n.to(DEVICE)
+            n.train(False)
 
             # We compute the loss for each output in order to choose the nn
             # with the smallest loss value
-            outputs = net[i](images)
+            outputs.append(n(images))
+            loss.append(criterion(outputs[i], labels))
 
-            l = []
-            for out, lab in zip(outputs, labels):
-                c = criterion(outputs, labels)
-                l.append(c)
-            loss.append(l)
+            # l = []
+            # for out, lab in zip(outputs, labels):
+            #     c = criterion(out, lab)
+            #     l.append(c)
+            # loss.append(l)
 
         best_net_index = np.asarray(loss).argmin(axis=0)
         preds = classifier(outputs[best_net_index])
@@ -246,7 +248,7 @@ def incremental_learning():
         all_classes_dataset = Cifar100(classes=range(0, (i + 1) * 10), train=False, transform=transform_test)
 
         # Prepare Dataloader
-        test_all_dataloader = DataLoader(all_classes_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
+        test_all_dataloader = DataLoader(all_classes_dataset, batch_size=TEST_BATCH_SIZE, shuffle=False, drop_last=False, num_workers=4)
 
         print('All classes')
 
