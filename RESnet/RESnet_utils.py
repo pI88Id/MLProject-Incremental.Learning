@@ -23,7 +23,7 @@ STEPDOWN_FACTOR = 5
 LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
-NUM_EPOCHS = 70
+NUM_EPOCHS = 7
 
 
 def test(net, test_dataloader, n_net):
@@ -39,7 +39,7 @@ def test(net, test_dataloader, n_net):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
-        # labels_hot = torch.eye(n_classes)[labels]
+        # labels_hot = torch.eye()[labels]
         # labels_hot = labels_hot.to(DEVICE)
 
         # Forward Pass
@@ -47,13 +47,13 @@ def test(net, test_dataloader, n_net):
 
         # Get predictions
         _, preds = torch.max(outputs.data, 1)
-        preds = Variable(preds) + n_net * 10
 
+        labels.data = labels.data - n_net*10
         loss = criterion(outputs, labels)
 
         # statistics
         running_loss += loss.item() * images.size(0)
-        running_corrects += torch.sum(preds == labels.data).data.item()
+        running_corrects += torch.sum(preds == labels.data - n_net*10).data.item()
 
     # Calculate average losses
     epoch_loss = running_loss / float(len(test_dataloader.dataset))
