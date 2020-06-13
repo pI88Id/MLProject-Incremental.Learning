@@ -157,15 +157,16 @@ def train(net, train_dataloader, test_dataloader, n_net):
             # forward
             outputs = net(inputs)
             _, preds = torch.max(outputs, 1)
-            preds = preds +  n_net*10
 
+            labels.data = labels.data - n_net * 10
             loss = criterion(outputs, labels)
+
             loss.backward()
             optimizer.step()
 
             # statistics
             running_loss += loss.item() * inputs.size(0)
-            running_corrects_train += torch.sum(preds == labels.data).data.item()
+            running_corrects_train += torch.sum(preds == labels.data - n_net*10).data.item()
 
         # Calculate average losses
         epoch_loss = running_loss / float(len(train_dataloader.dataset))
