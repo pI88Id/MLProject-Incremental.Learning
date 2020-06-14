@@ -16,14 +16,14 @@ from Cifar100.utils import Cifar100
 DEVICE = 'cuda'
 NUM_CLASSES = 10
 BATCH_SIZE = 128
-TEST_BATCH_SIZE = 1
+TEST_BATCH_SIZE = 2
 CLASSES_BATCH = 10
 STEPDOWN_EPOCHS = [49, 63]
 STEPDOWN_FACTOR = 5
 LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
-NUM_EPOCHS = 7
+NUM_EPOCHS = 70
 
 
 def test(net, test_dataloader, n_net):
