@@ -73,8 +73,12 @@ def final_test(net, test_dataloader):
         labels = labels.to(DEVICE)
         # lab = labels.to(DEVICE)
 
+        labels_hot = torch.eye(NUM_CLASSES*CLASSES_BATCH)[labels]
+        labels_hot = labels_hot.to(DEVICE)
+
         outputs = []
         loss = []
+        idxs = []
 
         #TODO: change the 10
         # labels_hot = torch.eye(10)[labels]
@@ -87,16 +91,12 @@ def final_test(net, test_dataloader):
             # with the smallest loss value
             output = n(images)
             outputs.append(output)
-            labels.data = labels.data - i*10
-            loss.append(criterion(output, labels).item())
+            idxs.append(mIndexFunction(output))
 
-            # l = []
-            # for out, lab in zip(outputs[i], labels):
-            #     c = criterion(out, lab)
-            #     l.append(c)
-            # loss.append(l)
+            # loss.append(criterion(output, labels).item())
 
-        best_net_index = np.asarray(loss).argmin(axis=0)
+        best_net_index = np.asarray(idxs).argmax()
+        # best_net_index = np.asarray(loss).argmin(axis=0)
         preds = classifier(outputs[best_net_index])
 
         #TODO: overwrite the output with normalized values (for loss function)
@@ -119,6 +119,13 @@ def final_test(net, test_dataloader):
 def classifier(outputs):
     _, preds = torch.max(outputs.data, 1)
     return preds
+
+def mIndexFunction (output):
+    tot = 0
+    for i, out in enumerate(output.data.sort()):
+        if i == 0: tot = out
+        tot -= float(out)/float(i+1)
+    return tot
 
 
 # train function
