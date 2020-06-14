@@ -85,9 +85,10 @@ def final_test(net, test_dataloader):
 
             # We compute the loss for each output in order to choose the nn
             # with the smallest loss value
-            outputs.append(n(images))
+            output = n(images)
+            outputs.append(output)
             labels.data = labels.data - i*10
-            loss.append(criterion(outputs[i], labels))
+            loss.append(criterion(output, labels).item())
 
             # l = []
             # for out, lab in zip(outputs[i], labels):
@@ -102,7 +103,7 @@ def final_test(net, test_dataloader):
         #TODO: Understand what s label and how to adapt to the nn forest
         #TODO: Then write a loss function
 
-        # running_loss += loss[best_net_index].item() * images.size(0)
+        running_loss += loss[best_net_index].item() * images.size(0)
         running_corrects += torch.sum(preds == labels.data).data.item()
 
     # Calculate average losses
