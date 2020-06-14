@@ -16,7 +16,7 @@ from Cifar100.utils import Cifar100
 DEVICE = 'cuda'
 NUM_CLASSES = 10
 BATCH_SIZE = 128
-TEST_BATCH_SIZE = 2
+TEST_BATCH_SIZE = 1
 CLASSES_BATCH = 10
 STEPDOWN_EPOCHS = [49, 63]
 STEPDOWN_FACTOR = 5
@@ -71,6 +71,7 @@ def final_test(net, test_dataloader):
     for index, images, labels in test_dataloader:
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
+        # lab = labels.to(DEVICE)
 
         outputs = []
         loss = []
@@ -85,10 +86,11 @@ def final_test(net, test_dataloader):
             # We compute the loss for each output in order to choose the nn
             # with the smallest loss value
             outputs.append(n(images))
+            labels.data = labels.data - i*10
             loss.append(criterion(outputs[i], labels))
 
             # l = []
-            # for out, lab in zip(outputs, labels):
+            # for out, lab in zip(outputs[i], labels):
             #     c = criterion(out, lab)
             #     l.append(c)
             # loss.append(l)
