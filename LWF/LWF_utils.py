@@ -19,7 +19,7 @@ LR = 2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.00001
 NUM_EPOCHS = 70
-LAMBDA = 1
+LAMBDA = 0.3
 
 def test(net, test_dataloader, n_classes):
     # criterion = nn.CrossEntropyLoss()
@@ -78,8 +78,8 @@ def update_classes(net, n_new_classes):
 def train(net, train_dataloader, test_dataloader, n_classes):
     prev_net = copy.deepcopy(net).to(DEVICE)
 
-    # criterion = nn.CrossEntropyLoss()
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.BCEWithLogitsLoss()
 
     parameters_to_optimize = net.parameters()
 
@@ -108,8 +108,8 @@ def train(net, train_dataloader, test_dataloader, n_classes):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
-            labels_hot = torch.eye(net.fc.out_features)[labels]
-            labels_hot = labels_hot.to(DEVICE)
+            # labels_hot = torch.eye(net.fc.out_features)[labels]
+            # labels_hot = labels_hot.to(DEVICE)
 
             net.train(True)
 
@@ -121,17 +121,19 @@ def train(net, train_dataloader, test_dataloader, n_classes):
 
             _, preds = torch.max(outputs, 1)
 
-            if n_classes != 10:
-                with torch.no_grad():
-                    old_outputs = torch.sigmoid(prev_net(inputs)).to(DEVICE)
-                labels_hot = torch.cat((old_outputs[:, :-10], labels_hot[:, -10:]), 1)
-                # new_outputs = outputs[:, :-10]
-                # old_outputs = old_outputs[:, :-10]
-                # old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
-                # loss = LAMBDA*old_loss + loss
+            loss = criterion(outputs, labels)
 
-            # loss = criterion(outputs, labels)
-            loss = criterion(outputs, labels_hot)
+            if n_classes != 10:
+                old_outputs = prev_net(inputs)
+                # with torch.no_grad():
+                #     old_outputs = torch.sigmoid(prev_net(inputs)).to(DEVICE)
+                # labels_hot = torch.cat((old_outputs[:, :-10], labels_hot[:, -10:]), 1)
+                new_outputs = outputs[:, :-10]
+                old_outputs = old_outputs[:, :-10]
+                old_loss = MultinomialLogisticLoss(old_outputs, new_outputs)
+                loss = LAMBDA * old_loss + loss
+
+            # loss = criterion(outputs, labels_hot)
 
             loss.backward()
             optimizer.step()
