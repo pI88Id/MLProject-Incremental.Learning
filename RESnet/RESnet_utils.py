@@ -39,8 +39,10 @@ def test(net, test_dataloader, n_net):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
 
-        # labels_hot = torch.eye()[labels]
-        # labels_hot = labels_hot.to(DEVICE)
+        labels.data = labels.data - n_net * 10
+
+        labels_hot = torch.eye(NUM_CLASSES)[labels]
+        labels_hot = labels_hot.to(DEVICE)
 
         # Forward Pass
         outputs = net(images)
@@ -48,8 +50,7 @@ def test(net, test_dataloader, n_net):
         # Get predictions
         _, preds = torch.max(outputs.data, 1)
 
-        labels.data = labels.data - n_net * 10
-        loss = criterion(outputs, labels)
+        loss = criterion(outputs, labels_hot)
 
         # statistics
         running_loss += loss.item() * images.size(0)
@@ -74,8 +75,8 @@ def final_test(net, test_dataloader):
         labels = labels.to(DEVICE)
         # lab = labels.to(DEVICE)
 
-        labels_hot = torch.eye(NUM_CLASSES * CLASSES_BATCH)[labels]
-        labels_hot = labels_hot.to(DEVICE)
+        # labels_hot = torch.eye(NUM_CLASSES * CLASSES_BATCH)[labels]
+        # labels_hot = labels_hot.to(DEVICE)
 
         outputs = []
         loss = []
@@ -143,8 +144,8 @@ def mIndexFunction(output):
 
 # train function
 def train(net, train_dataloader, test_dataloader, n_net):
-    criterion = nn.CrossEntropyLoss()
-    # criterion = nn.BCEWithLogitsLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     parameters_to_optimize = net.parameters()
     optimizer = optim.SGD(parameters_to_optimize, lr=LR, weight_decay=WEIGHT_DECAY)
@@ -171,8 +172,10 @@ def train(net, train_dataloader, test_dataloader, n_net):
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
 
-            # labels_hot = torch.eye(n_classes)[labels]
-            # labels_hot = labels_hot.to(DEVICE)
+            labels.data = labels.data - n_net * 10
+
+            labels_hot = torch.eye(NUM_CLASSES)[labels]
+            labels_hot = labels_hot.to(DEVICE)
 
             net.train(True)
             # zero the parameter gradients
@@ -181,8 +184,7 @@ def train(net, train_dataloader, test_dataloader, n_net):
             outputs = net(inputs)
             _, preds = torch.max(outputs, 1)
 
-            labels.data = labels.data - n_net * 10
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels_hot)
 
             loss.backward()
             optimizer.step()
