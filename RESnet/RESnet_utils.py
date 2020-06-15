@@ -27,8 +27,8 @@ NUM_EPOCHS = 70
 
 
 def test(net, test_dataloader, n_net):
-    criterion = nn.CrossEntropyLoss()
-    # criterion = nn.BCEWithLogitsLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     net.to(DEVICE)
     net.train(False)
@@ -93,6 +93,8 @@ def final_test(net, test_dataloader):
             # with the smallest loss value
             output = n(images)
             outputs.append(output)
+
+            output = torch.softmax(output, 1)
             idxs.append(mIndexFunction(output))
 
             # loss.append(criterion(output, labels).item())
@@ -127,17 +129,22 @@ def mIndexFunction(output):
     tot = 0
     idx = []
     output = output.cpu().detach().numpy()
-    print('output', output)
+    # print('output', output)
     for out in output:
         out.sort()
         out = out[::-1]
         # print('outreversed', out)
 
-        tot = 0
-        for i in range(len(out)):
-            if i == 0: tot = out[i]
-            tot -= out[i] / float(i + 1)
-        idx.append(tot * out[1]/out[0])
+        # tot = 0
+        # for i in range(3):#len(out)):
+        #     if i == 0: tot = out[i]
+        #     tot -= out[i] / float(i + 1)
+
+        tot = 1
+        for i in range(1, 3):
+            tot -= out[i] ** 2 / (out[0] * i)
+
+        idx.append(tot * out[1] / out[0])
         # print('tot', tot*(out[1])/out[0])
     return np.squeeze(idx)
 
