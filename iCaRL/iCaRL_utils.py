@@ -431,3 +431,5 @@ class iCaRL():
           accuracy_all.append(self.different_classifier(test_dataset_sofar, exemplars, net, classifier))
 
       return accuracy_new, accuracy_all
+    def get_exemplars:
+        return exemplars
